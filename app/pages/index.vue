@@ -166,7 +166,70 @@
           Ingressos
         </h2>
 
-        <div class="grid md:grid-cols-3 gap-4">
+        <div class="relative mb-6 bg-zinc-900/70 border border-zinc-800 rounded-2xl p-5">
+
+  <!-- BADGE -->
+  <span
+    class="absolute -top-3 left-1/2 -translate-x-1/2
+           bg-emerald-500 text-black text-xs font-bold
+           px-4 py-1 rounded-full tracking-wide"
+  >
+    Vagas limitadas
+  </span>
+
+  <!-- CONTAGEM -->
+  <div class="grid grid-cols-4 gap-3 text-center mb-10 mt-2">
+    <div>
+      <p class="text-2xl font-bold text-emerald-400">
+        {{ diff.days }}
+      </p>
+      <span class="text-xs text-gray-400">Dias</span>
+    </div>
+
+    <div>
+      <p class="text-2xl font-bold text-emerald-400">
+        {{ diff.hours }}
+      </p>
+      <span class="text-xs text-gray-400">Horas</span>
+    </div>
+
+    <div>
+      <p class="text-2xl font-bold text-emerald-400">
+        {{ diff.minutes }}
+      </p>
+      <span class="text-xs text-gray-400">Minutos</span>
+    </div>
+
+    <div>
+      <p class="text-2xl font-bold text-emerald-400">
+        {{ diff.seconds }}
+      </p>
+      <span class="text-xs text-gray-400">Segundos</span>
+    </div>
+  </div>
+
+  <!-- BADGE DE VAGAS -->
+  <div class="flex justify-center mt-1">
+    <div
+      class="inline-flex items-center gap-2 px-6 py-3
+             rounded-full border border-emerald-400/50
+             bg-black/70 shadow-md shadow-emerald-500/10"
+    >
+    <span class="text-emerald-400 text-xl">
+      🎟️
+    </span>
+      <span class="text-lg font-bold text-white">
+       {{ remainingSlots }} vagas disponíveis
+      </span>
+    </div>
+  </div>
+
+</div>
+
+
+
+
+        <div class="grid md:grid-cols-3 gap-4 mt-10">
           <!-- 2 DIAS -->
           <div
             class="relative border border-emerald-400/50 rounded-2xl p-6 text-center space-y-4
@@ -341,3 +404,43 @@
 
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+
+const EVENT_DATE = new Date('2026-01-31T08:00:00')
+const TOTAL_SLOTS = 65
+
+// depois você pode puxar isso do Supabase
+const soldSlots = ref(0)
+
+const now = ref(new Date())
+let timer: any = null
+
+onMounted(() => {
+  timer = setInterval(() => {
+    now.value = new Date()
+  }, 1000)
+})
+
+onUnmounted(() => {
+  clearInterval(timer)
+})
+
+const diff = computed(() => {
+  const ms = EVENT_DATE.getTime() - now.value.getTime()
+  const total = Math.max(ms, 0)
+
+  return {
+    days: Math.floor(total / (1000 * 60 * 60 * 24)),
+    hours: Math.floor((total / (1000 * 60 * 60)) % 24),
+    minutes: Math.floor((total / (1000 * 60)) % 60),
+    seconds: Math.floor((total / 1000) % 60),
+  }
+})
+
+const remainingSlots = computed(() =>
+  Math.max(TOTAL_SLOTS - soldSlots.value, 0)
+)
+</script>
+
