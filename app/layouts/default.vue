@@ -9,9 +9,9 @@
       </main>
 
       <!-- FOOTER -->
-      <footer class="text-center text-xs text-back-100 py-8">
+      <!-- <footer class="text-center text-xs text-back-100 py-8">
         © 2026 – Destrava Dev • Teresina/PI
-      </footer>
+      </footer> -->
 
       <a  v-if="!hideWhatsApp" 
   href="https://wa.me/5599999999999"

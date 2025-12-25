@@ -1,171 +1,84 @@
-<script setup lang="ts">
-import { ref } from 'vue'
-import { useRoute } from 'vue-router'
-
-const route = useRoute()
-
-/**
- * Planos válidos (controle TOTAL do frontend)
- */
-const plans = {
-  '2-dias': {
-    label: 'Ingresso 2 Dias',
-    price: 50,
-  },
-  'dia-1': {
-    label: 'Ingresso 1º Dia',
-    price: 30,
-  },
-  'dia-2': {
-    label: 'Ingresso 2º Dia',
-    price: 30,
-  },
-} as const
-
-const planKey = route.query.plano as keyof typeof plans
-
-if (!planKey || !plans[planKey]) {
-  throw createError({
-    statusCode: 400,
-    statusMessage: 'Plano inválido',
-  })
-}
-
-const selectedPlan = plans[planKey]
-
-/**
- * Dados do participante
- */
-const form = ref({
-  name: '',
-  cpf: '',
-  birthDate: '',
-  whatsapp: '',
-  paymentMethod: 'pix',
-})
-
-function submitCheckout() {
-  // 🔌 Aqui entra Supabase depois
-  console.log({
-    plan: planKey,
-    price: selectedPlan.price,
-    participant: form.value,
-  })
-}
-</script>
-
 <template>
   <section
     class="relative min-h-screen flex items-center text-white"
     style="
-      background-image: url('/images/fundo_destava.png');
+      background-image: url('/images/hero-planilhas-bg.png');
       background-size: cover;
       background-position: center;
     "
   >
     <!-- Overlay -->
-    <div class="absolute inset-0 bg-black/75"></div>
+    <div class="absolute inset-0 bg-black/20"></div>
 
-    <div class="relative z-10 w-full">
-      <div class="max-w-lg mx-auto px-6">
+    <div class="relative z-10 w-full flex justify-center ">
+      <div class="max-w-4xl w-full px-6">
 
         <!-- Cabeçalho -->
-        <div class="mb-6 text-center">
-          <h1 class="text-3xl font-bold mb-2">
-            Checkout
+        <div class="text-center mb-10">
+          <h1 class="text-4xl font-bold mb-2">
+            Finalizar inscrição
           </h1>
           <p class="text-gray-300">
-            Finalize sua inscrição no
-            <strong class="text-white">Destrava Dev</strong>
+            Workshop <strong class="text-white">Destravando Planilhas</strong>
           </p>
         </div>
 
-        <!-- Card -->
-        <div class="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-6">
-          <form
-            class="space-y-5"
-            @submit.prevent="submitCheckout"
-          >
-            <!-- PLANO SELECIONADO -->
-            <div class="bg-zinc-950 rounded-lg p-4 border border-zinc-700">
-              <p class="text-xs text-gray-400">
-                Ingresso selecionado
-              </p>
+        <!-- CONTEÚDO -->
+        <div
+          class="grid gap-6 items-stretch"
+          :class="showPayment ? 'md:grid-cols-2' : 'md:grid-cols-1'"
+        >
+
+          <!-- COLUNA FORM -->
+          <div class="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-6 flex flex-col">
+
+            <!-- Plano -->
+            <div class="bg-zinc-950 border border-zinc-700 rounded-lg p-4 mb-4">
+              <p class="text-xs text-gray-400">Ingresso selecionado</p>
 
               <div class="flex justify-between items-center mt-1">
                 <span class="font-semibold">
-                  {{ selectedPlan.label }}
+                  {{ PLAN.label }}
                 </span>
 
                 <span class="text-emerald-400 font-bold text-lg">
-                  R$ {{ selectedPlan.price }},00
+                  R$ {{ finalPrice.toFixed(2).replace('.', ',') }}
                 </span>
+              </div>
+
+              <p v-if="isPromo" class="text-xs text-gray-400 mt-1">
+                Lote promocional • valor normal R$ {{ PLAN.regularPrice }},00
+              </p>
+            </div>
+
+            <!-- Campos -->
+            <div class="space-y-4 flex-1">
+              <div>
+                <label class="label">Nome completo</label>
+                <input v-model="form.name" class="input" />
+              </div>
+
+              <div>
+                <label class="label">CPF</label>
+                <input v-model="form.cpf" class="input" />
+              </div>
+
+              <div>
+                <label class="label">Data de nascimento</label>
+                <input v-model="form.birthDate" type="date" class="input" />
+              </div>
+
+              <div>
+                <label class="label">WhatsApp</label>
+                <input v-model="form.whatsapp" class="input" />
               </div>
             </div>
 
-            <!-- Nome -->
-            <div>
-              <label class="block text-sm text-gray-300 mb-1">
-                Nome completo
-              </label>
-              <input
-                v-model="form.name"
-                required
-                placeholder="Digite seu nome completo"
-                class="w-full p-3 rounded-lg bg-zinc-950 border border-zinc-700
-                       focus:border-emerald-500 focus:outline-none"
-              />
-            </div>
-
-            <!-- CPF -->
-            <div>
-              <label class="block text-sm text-gray-300 mb-1">
-                CPF
-              </label>
-              <input
-                v-model="form.cpf"
-                required
-                placeholder="000.000.000-00"
-                class="w-full p-3 rounded-lg bg-zinc-950 border border-zinc-700
-                       focus:border-emerald-500 focus:outline-none"
-              />
-            </div>
-
-            <!-- Data de nascimento -->
-            <div>
-              <label class="block text-sm text-gray-300 mb-1">
-                Data de nascimento
-              </label>
-              <input
-                v-model="form.birthDate"
-                type="date"
-                required
-                class="w-full p-3 rounded-lg bg-zinc-950 border border-zinc-700
-                       focus:border-emerald-500 focus:outline-none"
-              />
-            </div>
-
-            <!-- WhatsApp -->
-            <div>
-              <label class="block text-sm text-gray-300 mb-1">
-                WhatsApp
-              </label>
-              <input
-                v-model="form.whatsapp"
-                required
-                placeholder="(86) 99999-9999"
-                class="w-full p-3 rounded-lg bg-zinc-950 border border-zinc-700
-                       focus:border-emerald-500 focus:outline-none"
-              />
-            </div>
-
             <!-- Forma de pagamento -->
-            <div>
-              <label class="block text-sm text-gray-300 mb-2">
-                Forma de pagamento
-              </label>
+            <div v-if="canChoosePayment" class="mt-6">
+              <label class="label mb-2">Forma de pagamento</label>
 
-              <div class="grid grid-cols-3 gap-3">
+              <div class="grid grid-cols-2 gap-3">
                 <button
                   type="button"
                   @click="form.paymentMethod = 'pix'"
@@ -185,39 +98,157 @@ function submitCheckout() {
                     : 'bg-zinc-800 text-white'"
                   class="py-3 rounded-lg font-semibold transition"
                 >
-                  Crédito
-                </button>
-
-                <button
-                  type="button"
-                  @click="form.paymentMethod = 'debit'"
-                  :class="form.paymentMethod === 'debit'
-                    ? 'bg-emerald-500 text-black'
-                    : 'bg-zinc-800 text-white'"
-                  class="py-3 rounded-lg font-semibold transition"
-                >
-                  Débito
+                  Cartão
                 </button>
               </div>
             </div>
+          </div>
 
-            <!-- Botão -->
-            <button
-              type="submit"
-              class="w-full bg-emerald-500 hover:bg-emerald-600 py-4
-                     rounded-lg font-semibold transition"
+          <!-- COLUNA PAGAMENTO -->
+          <div
+            v-if="showPayment"
+            class="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 flex flex-col"
+          >
+
+            <!-- PIX -->
+            <div
+              v-if="form.paymentMethod === 'pix'"
+              class="flex-1 flex flex-col justify-center space-y-4"
             >
-              Continuar para pagamento
-            </button>
-          </form>
+              <p class="font-semibold text-lg">Pagamento via Pix</p>
+
+              <div class="bg-white rounded-lg p-4 flex justify-center">
+                <img src="/images/qrcode-simulado.png" class="w-44 h-44" />
+              </div>
+
+              <p class="text-center text-sm text-gray-400">
+                Expira em <strong>{{ pixTimeFormatted }}</strong>
+              </p>
+
+              <button
+                type="button"
+                @click="copyPix"
+                class="w-full border border-emerald-500 text-emerald-400
+                       py-3 rounded-lg hover:bg-emerald-500 hover:text-black transition"
+              >
+                Copiar código Pix
+              </button>
+            </div>
+
+            <!-- CARTÃO -->
+            <div v-if="form.paymentMethod === 'credit'" class="space-y-4">
+              <p class="font-semibold text-lg">Pagamento com cartão</p>
+
+              <input class="input" placeholder="Número do cartão" />
+
+              <div class="grid grid-cols-2 gap-3">
+                <input class="input" placeholder="MM/AA" />
+                <input class="input" placeholder="CVV" />
+              </div>
+
+              <input class="input" placeholder="Nome impresso no cartão" />
+
+              <button
+                type="button"
+                @click="payWithCard"
+                class="w-full bg-emerald-500 hover:bg-emerald-600
+                       py-3 rounded-lg font-semibold transition"
+              >
+                Pagar agora
+              </button>
+            </div>
+          </div>
         </div>
 
-        <!-- Rodapé -->
-        <p class="text-xs text-gray-400 text-center mt-6">
-          Você será redirecionado para o pagamento com segurança.
+        <p class="text-xs text-gray-400 text-center mt-8">
+          Pagamento seguro • Seus dados estão protegidos
         </p>
-
       </div>
     </div>
   </section>
 </template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+
+const PLAN = {
+  key: 'workshop-planilhas',
+  label: 'Workshop Destravando Planilhas • 2 Dias',
+  promoPrice: 120,
+  regularPrice: 150,
+}
+
+if (route.query.plano !== PLAN.key) {
+  throw createError({ statusCode: 400, statusMessage: 'Plano inválido' })
+}
+
+const form = ref({
+  name: '',
+  cpf: '',
+  birthDate: '',
+  whatsapp: '',
+  paymentMethod: null as null | 'pix' | 'credit',
+})
+
+const isPromo = ref(true)
+
+const finalPrice = computed(() =>
+  isPromo.value ? PLAN.promoPrice : PLAN.regularPrice
+)
+
+const canChoosePayment = computed(() =>
+  form.value.name &&
+  form.value.cpf &&
+  form.value.birthDate &&
+  form.value.whatsapp
+)
+
+const showPayment = computed(() =>
+  canChoosePayment.value && form.value.paymentMethod
+)
+
+/* PIX */
+const pixExpiresIn = ref(300)
+let pixTimer: any = null
+
+onMounted(() => {
+  pixTimer = setInterval(() => {
+    if (pixExpiresIn.value > 0) pixExpiresIn.value--
+  }, 1000)
+})
+
+onUnmounted(() => clearInterval(pixTimer))
+
+const pixTimeFormatted = computed(() => {
+  const m = Math.floor(pixExpiresIn.value / 60)
+  const s = pixExpiresIn.value % 60
+  return `${m}:${s.toString().padStart(2, '0')}`
+})
+
+function copyPix() {
+  navigator.clipboard.writeText('PIX_QRCODE_SIMULADO')
+  alert('Código PIX copiado!')
+}
+
+function payWithCard() {
+  console.log('Pagamento com cartão', {
+    price: finalPrice.value,
+    participant: form.value,
+  })
+}
+</script>
+
+<style scoped>
+  .label {
+  @apply block text-sm text-gray-300 mb-1;
+}
+
+.input {
+  @apply w-full p-3 rounded-lg bg-zinc-950 border border-zinc-700
+         focus:border-emerald-500 focus:outline-none;
+}
+
+</style>
