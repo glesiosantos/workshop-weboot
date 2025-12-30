@@ -12,5 +12,11 @@ export default defineNuxtConfig({
         }
       ]
     }
-  }
+  },
+  runtimeConfig: {
+    public: {
+      siteId: '8a1da6bd-93f7-476d-9759-d3674500dfe0'
+    }
+  },
+  plugins: ['~/plugins/tracker.client.ts']
 })

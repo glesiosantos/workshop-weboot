@@ -60,7 +60,16 @@
 
               <div>
                 <label class="label">CPF</label>
-                <input v-model="form.cpf" class="input" />
+                <input
+                  :value="cpfMasked"
+                  class="input"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  @keydown="allowOnlyNumbers"
+                  @input="onCpfInput"
+                  @paste.prevent="onCpfPaste"
+                />
+
               </div>
 
               <div>
@@ -70,7 +79,16 @@
 
               <div>
                 <label class="label">WhatsApp</label>
-                <input v-model="form.whatsapp" class="input" />
+                <input
+                  :value="whatsappMasked"
+                  class="input"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  @keydown="allowOnlyNumbers"
+                  @input="onWhatsappInput"
+                  @paste.prevent="onWhatsappPaste"
+                />
+
               </div>
             </div>
 
@@ -171,25 +189,53 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { allowOnlyNumbers, sanitizeNumber } from '~/utlis/inputGuards'
+import { maskCPF, maskPhone, onlyNumbers } from '~/utlis/masks'
 
 const route = useRoute()
 
 const PLAN = {
   key: 'workshop-planilhas',
   label: 'Workshop Destravando Planilhas • 2 Dias',
-  promoPrice: 120,
-  regularPrice: 150,
+  promoPrice: 100,
+  regularPrice: 120,
 }
 
 if (route.query.plano !== PLAN.key) {
   throw createError({ statusCode: 400, statusMessage: 'Plano inválido' })
 }
 
+const cpfMasked = computed(() => maskCPF(form.value.cpf))
+
+function onCpfInput(e: Event) {
+  const el = e.target as HTMLInputElement
+  form.value.cpf = sanitizeNumber(el.value).slice(0, 11)
+}
+
+function onCpfPaste(e: ClipboardEvent) {
+  const text = e.clipboardData?.getData('text') || ''
+  form.value.cpf = sanitizeNumber(text).slice(0, 11)
+}
+
+const whatsappMasked = computed(() =>
+  maskPhone(form.value.whatsapp)
+)
+
+function onWhatsappInput(e: Event) {
+  const el = e.target as HTMLInputElement
+  form.value.whatsapp = sanitizeNumber(el.value).slice(0, 11)
+}
+
+function onWhatsappPaste(e: ClipboardEvent) {
+  const text = e.clipboardData?.getData('text') || ''
+  form.value.whatsapp = sanitizeNumber(text).slice(0, 11)
+}
+
 const form = ref({
   name: '',
-  cpf: '',
+  cpf: '',        // só números
   birthDate: '',
-  whatsapp: '',
+  whatsapp: '',   // só números
   paymentMethod: null as null | 'pix' | 'credit',
 })
 
@@ -200,11 +246,12 @@ const finalPrice = computed(() =>
 )
 
 const canChoosePayment = computed(() =>
-  form.value.name &&
-  form.value.cpf &&
-  form.value.birthDate &&
-  form.value.whatsapp
+  form.value.name.length > 3 &&
+  form.value.cpf.length === 11 &&
+  form.value.whatsapp.length >= 10 &&
+  form.value.birthDate
 )
+
 
 const showPayment = computed(() =>
   canChoosePayment.value && form.value.paymentMethod

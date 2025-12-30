@@ -349,12 +349,12 @@
         </h3>
 
         <p class="text-5xl font-extrabold text-emerald-400">
-          R$ 120<span class="text-lg align-top">,00</span>
+          R$ 100<span class="text-lg align-top">,00</span>
         </p>
 
         <p class="text-sm text-gray-400">
           Lote promocional • 30 primeiras vagas<br />
-          Após: R$ 150,00
+          Após: R$ 120,00
         </p>
 
         <ul class="text-sm text-gray-300 space-y-2 text-left mt-4">
