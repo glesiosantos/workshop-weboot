@@ -10,3 +10,15 @@
     <NuxtPage />
   </NuxtLayout>
 </template>
+<style lang="css">
+@media print {
+body {
+  background: white;
+  color: black;
+}
+
+button {
+  display: none;
+}
+}
+</style>

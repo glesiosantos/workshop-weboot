@@ -1,19 +1,15 @@
+import type { RegisterParticipantResponse } from "~/types/register-participant.response"
+
 export function useRegistration() {
   const config = useRuntimeConfig()
 
   async function registerParticipant(payload: any) {
-
-    console.log('PAYLOAD ENVIADO →', payload)
+    const response = await $fetch<RegisterParticipantResponse>(`${config.public.supabaseUrl}/functions/v1/register-participant`, {
+      method: 'POST',
+      body: payload
+    })
     
-    try {
-      return await $fetch(`${config.public.supabaseUrl}/functions/v1/register-participant`, {
-        method: 'POST',
-        body: payload
-      })
-    } catch (err: any) {
-      console.error('Erro na function →', err?.data || err)
-      throw err
-    }
+    return response
   }
 
   return { registerParticipant }

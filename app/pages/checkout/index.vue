@@ -156,8 +156,8 @@
             <!-- CARTÃO -->
             <div v-if="form.paymentMethod === 'credit'" class="space-y-4">
               <p class="font-semibold text-lg">Pagamento com cartão</p>
-
-              <input
+              
+                <input
                 :value="cardNumberMasked"
                 class="input"
                 inputmode="numeric"
@@ -201,12 +201,13 @@
                 @input="onHolderInput"
                 class="input uppercase"
                 placeholder="Nome impresso no cartão"
+                @keydown="preventEnter"
               />
 
-
               <button
-                :disabled="!isCardValid"
+                type="button"
                 @click="payWithCard"
+                :disabled="!isCardValid || isSubmitting"
                 class="w-full bg-emerald-500 py-3 rounded-lg"
               >
                 Pagar agora
@@ -230,8 +231,11 @@ import { allowOnlyNumbers, sanitizeNumber } from '~/utlis/inputGuards'
 import { maskCardNumber, maskCPF, maskExpiry, maskPhone, onlyNumbers } from '~/utlis/masks'
 
 const route = useRoute()
+const router = useRouter()
 const config = useRuntimeConfig()
 const { registerParticipant } = useRegistration()
+
+const isSubmitting = ref(false)
 
 const card = ref({
   number: '',
@@ -311,6 +315,11 @@ const isCardValid = computed(() => {
   )
 })
 
+function preventEnter(e: KeyboardEvent) {
+  if (e.key === 'Enter') {
+    e.preventDefault()
+  }
+}
 
 const PLAN = {
   key: 'workshop-planilhas',
@@ -395,35 +404,51 @@ const pixTimeFormatted = computed(() => {
 
 async function copyPix() {
   navigator.clipboard.writeText('PIX_QRCODE_SIMULADO')
+  form.value.paymentMethod = 'pix'
   await submitRegistration() 
-  alert('Código PIX copiado!')
 }
 
 async function payWithCard() {
   form.value.paymentMethod = 'credit'
   await submitRegistration()
-  console.log('Pagamento com cartão', {
-    price: finalPrice.value,
-    participant: form.value,
-  })
 }
 
 async function submitRegistration() {
-  if (!canChoosePayment.value) return
+  if (isSubmitting.value) return
+  isSubmitting.value = true
 
   const payload = {
     eventId: config.public.eventId,
     nome: form.value.name,
     cpf: form.value.cpf,
-    whatsapp: form.value.whatsapp,
     birthDate: form.value.birthDate,
+    whatsapp: form.value.whatsapp,
     paymentMethod: form.value.paymentMethod,
     valor: finalPrice.value
   }
+
+  const res = await registerParticipant(payload)
+
+  console.log('**** ***** RES →', res)
+  console.log('**** ***** PARTICIPANT →', res?.participant)
+  console.log('**** ***** ID →', res?.participant?.id)
+
+  const participantId = res?.participant?.id
   
-   const res = await registerParticipant(payload)
-   console.log(`***** ****** result: ${res}`) 
+  // 🔐 proteção absoluta
+  if (!res?.participant?.id) return
+  
+
+  if (!participantId) {
+    console.error('ID do participante não retornado', res)
+    return
+  }
+
+  router.push(`/processing/${participantId}`)
 }
+
+
+
 
 </script>
 

@@ -1,4 +1,10 @@
 export function allowOnlyNumbers(e: KeyboardEvent) {
+
+   if (e.key === 'Enter') {
+    e.preventDefault()
+    return
+  }
+
   const allowedKeys = [
     'Backspace',
     'Delete',
