@@ -21,3 +21,19 @@ export function maskPhone(value: string) {
     return `(${v.slice(0, 2)}) ${v.slice(2, 6)}-${v.slice(6)}`
   return `(${v.slice(0, 2)}) ${v.slice(2, 7)}-${v.slice(7)}`
 }
+
+export function maskCardNumber(value: string) {
+  const v = onlyNumbers(value).slice(0, 16)
+  return v.replace(/(\d{4})(?=\d)/g, '$1 ')
+}
+
+export function maskExpiry(value: string) {
+  const v = onlyNumbers(value).slice(0, 4)
+
+  if (v.length <= 2) return v
+  return `${v.slice(0, 2)}/${v.slice(2)}`
+}
+
+export function maskCVV(value: string) {
+  return onlyNumbers(value).slice(0, 4)
+}

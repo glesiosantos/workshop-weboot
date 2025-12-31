@@ -157,20 +157,57 @@
             <div v-if="form.paymentMethod === 'credit'" class="space-y-4">
               <p class="font-semibold text-lg">Pagamento com cartão</p>
 
-              <input class="input" placeholder="Número do cartão" />
+              <input
+                :value="cardNumberMasked"
+                class="input"
+                inputmode="numeric"
+                autocomplete="cc-number"
+                maxlength="19"
+                @keydown="allowOnlyNumbers"
+                @input="onCardNumberInput"
+                @paste.prevent="onCardNumberPaste"
+              />
+
 
               <div class="grid grid-cols-2 gap-3">
-                <input class="input" placeholder="MM/AA" />
-                <input class="input" placeholder="CVV" />
+                <input
+                  :value="expiryMasked"
+                  class="input"
+                  inputmode="numeric"
+                  autocomplete="cc-exp"
+                  maxlength="5"
+                  @keydown="allowOnlyNumbers"
+                  @input="onExpiryInput"
+                  @paste.prevent="onExpiryPaste"
+                />
+
+
+                <input
+                  :value="card.cvv"
+                  class="input"
+                  inputmode="numeric"
+                  autocomplete="cc-csc"
+                  maxlength="4"
+                  @keydown="allowOnlyNumbers"
+                  @input="onCvvInput"
+                  @paste.prevent="onCvvPaste"
+                />
+
+
               </div>
 
-              <input class="input" placeholder="Nome impresso no cartão" />
+              <input
+                :value="card.holder"
+                @input="onHolderInput"
+                class="input uppercase"
+                placeholder="Nome impresso no cartão"
+              />
+
 
               <button
-                type="button"
+                :disabled="!isCardValid"
                 @click="payWithCard"
-                class="w-full bg-emerald-500 hover:bg-emerald-600
-                       py-3 rounded-lg font-semibold transition"
+                class="w-full bg-emerald-500 py-3 rounded-lg"
               >
                 Pagar agora
               </button>
@@ -190,9 +227,90 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { allowOnlyNumbers, sanitizeNumber } from '~/utlis/inputGuards'
-import { maskCPF, maskPhone, onlyNumbers } from '~/utlis/masks'
+import { maskCardNumber, maskCPF, maskExpiry, maskPhone, onlyNumbers } from '~/utlis/masks'
 
 const route = useRoute()
+const config = useRuntimeConfig()
+const { registerParticipant } = useRegistration()
+
+const card = ref({
+  number: '',
+  expiry: '', // MMYY
+  cvv: '',
+  holder: ''
+})
+
+const cardNumberMasked = computed(() =>
+  maskCardNumber(card.value.number)
+)
+
+function onCardNumberInput(e: Event) {
+  const el = e.target as HTMLInputElement
+  card.value.number = onlyNumbers(el.value).slice(0, 16)
+}
+
+function onCardNumberPaste(e: ClipboardEvent) {
+  const text = e.clipboardData?.getData('text') || ''
+  card.value.number = onlyNumbers(text).slice(0, 16)
+}
+
+const expiryMasked = computed(() =>
+  maskExpiry(card.value.expiry)
+)
+
+function onExpiryInput(e: Event) {
+  const el = e.target as HTMLInputElement
+  card.value.expiry = onlyNumbers(el.value).slice(0, 4)
+}
+
+
+function onExpiryPaste(e: ClipboardEvent) {
+  const text = e.clipboardData?.getData('text') || ''
+  card.value.expiry = onlyNumbers(text).slice(0, 4)
+}
+
+function onCvvInput(e: Event) {
+  const el = e.target as HTMLInputElement
+  card.value.cvv = onlyNumbers(el.value).slice(0, 4)
+}
+
+function onCvvPaste(e: ClipboardEvent) {
+  const text = e.clipboardData?.getData('text') || ''
+  card.value.cvv = onlyNumbers(text).slice(0, 4)
+}
+
+function onHolderInput(e: Event) {
+  const el = e.target as HTMLInputElement
+
+  card.value.holder = el.value
+    .toUpperCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+const isCardValid = computed(() => {
+  const debug = {
+    number: card.value.number,
+    numberLen: card.value.number.length,
+
+    expiry: card.value.expiry,
+    expiryLen: card.value.expiry.length,
+
+    cvv: card.value.cvv,
+    cvvLen: card.value.cvv.length,
+
+    holder: card.value.holder,
+    holderLen: card.value.holder.length
+  }
+
+  return (
+    debug.numberLen === 16 &&
+    debug.expiryLen === 4 &&
+    debug.cvvLen >= 3 &&
+    debug.holderLen > 3
+  )
+})
+
 
 const PLAN = {
   key: 'workshop-planilhas',
@@ -209,7 +327,7 @@ const cpfMasked = computed(() => maskCPF(form.value.cpf))
 
 function onCpfInput(e: Event) {
   const el = e.target as HTMLInputElement
-  form.value.cpf = sanitizeNumber(el.value).slice(0, 11)
+  form.value.cpf = onlyNumbers(el.value).slice(0, 11)
 }
 
 function onCpfPaste(e: ClipboardEvent) {
@@ -232,6 +350,7 @@ function onWhatsappPaste(e: ClipboardEvent) {
 }
 
 const form = ref({
+  eventId: '',
   name: '',
   cpf: '',        // só números
   birthDate: '',
@@ -251,7 +370,6 @@ const canChoosePayment = computed(() =>
   form.value.whatsapp.length >= 10 &&
   form.value.birthDate
 )
-
 
 const showPayment = computed(() =>
   canChoosePayment.value && form.value.paymentMethod
@@ -275,17 +393,38 @@ const pixTimeFormatted = computed(() => {
   return `${m}:${s.toString().padStart(2, '0')}`
 })
 
-function copyPix() {
+async function copyPix() {
   navigator.clipboard.writeText('PIX_QRCODE_SIMULADO')
+  await submitRegistration() 
   alert('Código PIX copiado!')
 }
 
-function payWithCard() {
+async function payWithCard() {
+  form.value.paymentMethod = 'credit'
+  await submitRegistration()
   console.log('Pagamento com cartão', {
     price: finalPrice.value,
     participant: form.value,
   })
 }
+
+async function submitRegistration() {
+  if (!canChoosePayment.value) return
+
+  const payload = {
+    eventId: config.public.eventId,
+    nome: form.value.name,
+    cpf: form.value.cpf,
+    whatsapp: form.value.whatsapp,
+    birthDate: form.value.birthDate,
+    paymentMethod: form.value.paymentMethod,
+    valor: finalPrice.value
+  }
+  
+   const res = await registerParticipant(payload)
+   console.log(`***** ****** result: ${res}`) 
+}
+
 </script>
 
 <style scoped>

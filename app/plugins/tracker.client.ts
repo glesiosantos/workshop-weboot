@@ -7,19 +7,20 @@ export default defineNuxtPlugin(() => {
   const siteId = config.public.siteId
   if (!siteId) return
 
-  const track = () => {
-    fetch('http://localhost:54321/functions/v1/track-visit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        siteId,
-        page: window.location.pathname,
-        referrer: document.referrer || null,
-        userAgent: navigator.userAgent,
-        device: window.innerWidth < 768 ? 'mobile' : 'desktop'
-      })
-    }).catch(() => {})
-  }
+  // const track = () => {
+  //   fetch('http://localhost:54321/functions/v1/track-visit', {
+  //     method: 'POST',
+  //     headers: { 'Content-Type': 'application/json' },
+  //     body: JSON.stringify({
+  //       siteId,
+  //       page: window.location.pathname,
+  //       referrer: document.referrer || null,
+  //       userAgent: navigator.userAgent,
+  //       device: window.innerWidth < 768 ? 'mobile' : 'desktop'
+  //     })
+  //   }).catch(() => {})
+  // }
+  const track = () => {}
 
   // primeira carga
   track()
