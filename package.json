@@ -10,7 +10,9 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "html2canvas": "^1.4.1",
     "html5-qrcode": "^2.3.8",
+    "jspdf": "^3.0.4",
     "mercadopago": "^2.11.0",
     "nuxt": "^4.2.2",
     "qrcode": "^1.5.4",

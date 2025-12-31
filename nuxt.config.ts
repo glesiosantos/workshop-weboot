@@ -17,7 +17,8 @@ export default defineNuxtConfig({
     public: {
       // siteId: '8a1da6bd-93f7-476d-9759-d3674500dfe0'
       supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE,
-      eventId: process.env.NUXT_PUBLIC_EVENT_I
+      eventId: process.env.NUXT_PUBLIC_EVENT_I,
+      supabaseAnonKey: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY
     }
   },
   // plugins: ['~/plugins/tracker.client.ts']
